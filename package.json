@@ -1,0 +1,27 @@
+{
+	"name": "@bankall/mysql-backend",
+	"version": "0.0.1",
+	"description": "Simple node backend for CRUD operation on mysql database, based on express.js",
+	"main": "index.js",
+	"scripts": {
+		"test": "test"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Bankall/mysql-backend.git"
+	},
+	"keywords": [
+		"CRUD",
+		"backend",
+		"mysql"
+	],
+	"author": "Christian Sulecki <christian.sulecki@gmail.com>",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/Bankall/mysql-backend/issues"
+	},
+	"homepage": "https://github.com/Bankall/mysql-backend#readme",
+	"dependencies": {
+		"mysql": "^2.18.1"
+	}
+}
