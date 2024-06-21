@@ -108,6 +108,7 @@ class MySQLBackend {
 		const id = req.params.id;
 		const body = req.body;
 		const query = req.query;
+		const where = req.where;
 
 		if (!this.cache.table[table]) {
 			console.log(`table ${table} scheme not ready`);
@@ -118,7 +119,7 @@ class MySQLBackend {
 		}
 
 		try {
-			const data = await this[method]({ table, id, body, query });
+			const data = await this[method]({ table, id, body, query, where });
 			res.status(data.length ? 204 : 200).send(data.result);
 		} catch (err) {
 			res.status(this.getErrorCode(method)).send(err);
@@ -262,7 +263,7 @@ class MySQLBackend {
 			const filterKeys = Object.keys(where).filter(key => this.cache.table[table].includes(key));
 
 			filterKeys.forEach(key => {
-				let values = where[key].split(",");
+				let values = where[key].toString().split(",");
 				let subfilter = [];
 
 				values.forEach(value => {
@@ -279,7 +280,7 @@ class MySQLBackend {
 		}
 
 		this.cache.table[table].forEach(key => {
-			if (body[key]) {
+			if (typeof body[key] !== "undefined") {
 				data.push(`${key} = ${this.escape(body[key])}`);
 			}
 		});
