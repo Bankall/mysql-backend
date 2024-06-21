@@ -5,7 +5,7 @@ class MySQLBackend {
 
 	cache = {
 		tableNames: [],
-		table: {},
+		table: {}
 	};
 
 	triggers = {};
@@ -26,7 +26,7 @@ class MySQLBackend {
 			user: this.config["mysql.user"],
 			password: this.config["mysql.password"],
 			database: this.config["mysql.database"],
-			flags: "ANSI_QUOTES",
+			flags: "ANSI_QUOTES"
 		});
 	}
 
@@ -215,7 +215,7 @@ class MySQLBackend {
 			const filterKeys = Object.keys(query).filter(key => this.cache.table[table].includes(key));
 
 			filterKeys.forEach(key => {
-				let values = query[key].split(",");
+				let values = query[key].toString().split(",");
 				let subfilter = [];
 
 				values.forEach(value => {
@@ -249,9 +249,34 @@ class MySQLBackend {
 		return {};
 	}
 
-	put({ table, id, body }) {
+	put({ table, id, where, body }) {
 		const eventKey = `put-${table}`;
 		const data = [];
+		const filters = [];
+
+		if (id) {
+			filters.push(`id=${this.escape(id)}`);
+		}
+
+		if (where && Object.keys(where).length) {
+			const filterKeys = Object.keys(where).filter(key => this.cache.table[table].includes(key));
+
+			filterKeys.forEach(key => {
+				let values = where[key].split(",");
+				let subfilter = [];
+
+				values.forEach(value => {
+					subfilter.push(`${key} = ${this.escape(value)}`);
+				});
+
+				subfilter = subfilter.length > 1 ? `(${subfilter.join(" OR ")})` : subfilter[0];
+				filters.push(subfilter);
+			});
+		}
+
+		if (!filters.length) {
+			throw "Put request needs a where condition";
+		}
 
 		this.cache.table[table].forEach(key => {
 			if (body[key]) {
@@ -259,7 +284,7 @@ class MySQLBackend {
 			}
 		});
 
-		return this.handleQuery(`UPDATE ?? SET ${data.join(",")} WHERE id = ?`, [table, id], eventKey, false, id);
+		return this.handleQuery(`UPDATE ?? SET ${data.join(",")} ${filters.length ? `WHERE ${filters.join(" AND ")}` : ``}`, [table, id], eventKey, false, id);
 	}
 }
 
