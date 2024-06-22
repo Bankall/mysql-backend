@@ -237,7 +237,7 @@ class MySQLBackend {
 		const eventKey = `post-${table}`;
 
 		this.cache.table[table].forEach(key => {
-			if (body[key]) {
+			if (typeof body[key] !== "undefined") {
 				keys.push(key);
 				data.push(typeof body[key] === "object" ? JSON.stringify(body[key]) : body[key]);
 			}

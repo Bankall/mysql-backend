@@ -1,6 +1,6 @@
 {
 	"name": "@bankall/mysql-backend",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "Simple node backend for CRUD operation on mysql database, based on express.js",
 	"main": "index.js",
 	"scripts": {
