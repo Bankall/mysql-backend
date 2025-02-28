@@ -26,7 +26,9 @@ class MySQLBackend {
 			user: this.config["mysql.user"],
 			password: this.config["mysql.password"],
 			database: this.config["mysql.database"],
-			flags: "ANSI_QUOTES"
+			charset: "utf8mb4",
+			flags: "ANSI_QUOTES",
+			dateStrings: true
 		});
 	}
 
@@ -129,7 +131,7 @@ class MySQLBackend {
 	spawnEndPoints() {
 		const handleSpawnEndPoints = resolve => {
 			if (!this.cache.tableNames.length) {
-				console.log(`databse scheme not ready`);
+				console.log(`database scheme not ready`);
 
 				return this.sleep(200).then(() => {
 					handleSpawnEndPoints(resolve);
@@ -167,14 +169,18 @@ class MySQLBackend {
 		});
 	}
 
-	escape(value) {
-		return parseFloat(value, 10).toString() === value.toString() ? parseFloat(value, 10) : mysql.escape(value, true);
+	escape(value, dontEscapeString) {
+		if (typeof value === "undefined" || value === null) {
+			return null;
+		}
+
+		return parseFloat(value, 10).toString() === value.toString() ? parseFloat(value, 10) : dontEscapeString ? value : mysql.escape(value, true);
 	}
 
 	handleQuery(query, _args, eventKey, array, insertId) {
 		return new Promise((resolve, reject) => {
 			try {
-				this.pool.getConnection((err, connection) => {
+				this.pool.getConnection(async (err, connection) => {
 					try {
 						if (err) {
 							throw err;
@@ -182,7 +188,7 @@ class MySQLBackend {
 
 						connection.query(query, _args, (err, response) => {
 							if (err) {
-								console.log("Query error: " + err.sqlMessage);
+								console.log("Query error: ", err);
 								return reject({ error: err.sqlMessage });
 							}
 
@@ -252,7 +258,7 @@ class MySQLBackend {
 
 	put({ table, id, where, body }) {
 		const eventKey = `put-${table}`;
-		const data = [];
+		const data = {};
 		const filters = [];
 
 		if (id) {
@@ -281,11 +287,11 @@ class MySQLBackend {
 
 		this.cache.table[table].forEach(key => {
 			if (typeof body[key] !== "undefined") {
-				data.push(`${key} = ${this.escape(body[key])}`);
+				data[key] = this.escape(body[key], true);
 			}
 		});
 
-		return this.handleQuery(`UPDATE ?? SET ${data.join(",")} ${filters.length ? `WHERE ${filters.join(" AND ")}` : ``}`, [table, id], eventKey, false, id);
+		return this.handleQuery(`UPDATE ?? SET ? ${filters.length ? `WHERE ${filters.join(" AND ")}` : ``}`, [table, data, id], eventKey, false, id);
 	}
 }
 
